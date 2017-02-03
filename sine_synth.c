@@ -223,9 +223,22 @@ tick_voice(Voice* voice, SineSynth* self) {
   return val * voice->envelope_level;
 }
 
+static void allocate_voices(VoiceList* voices) {
+  VoiceList* head;
+
+  for (int i_voice = 0; i_voice < N_VOICES; i_voice++) {
+    Voice* voice = (Voice*)malloc(sizeof(Voice));
+
+    voices->voice = voice;
+    voices->next = head;
+
+    head = voices;
+  }
+}
+
 static void
-free_voice_list(VoiceList* voice_list) {
-  VoiceList* curr = voice_list;
+free_voices(VoiceList* voices) {
+  VoiceList* curr = voices;
 
   while (curr != NULL) {
     free(curr->voice);
@@ -233,7 +246,7 @@ free_voice_list(VoiceList* voice_list) {
     curr = curr->next;
   }
 
-  free(voice_list);
+  free(voices);
 }
 
 /*
@@ -332,7 +345,7 @@ render_samples(uint32_t from, uint32_t to, SineSynth* self) {
     out_left[pos]  = 0;
 
     VoiceList* curr = self->active_voices;
-    while (curr != NULL) {
+    while (curr->voice != NULL) {
       Voice* voice = curr->voice;
 
       if (voice->velocity > 0) {
@@ -395,6 +408,14 @@ instantiate(const LV2_Descriptor*     descriptor,
   self->uris.midi_MidiEvent = map->map(map->handle, LV2_MIDI__MidiEvent);
   self->sample_rate    = rate;
   self->sample_rate_ms = rate / 1000.0;
+
+  self->active_voices = (VoiceList*)malloc(sizeof(VoiceList));
+  self->inactive_voices = (VoiceList*)malloc(sizeof(VoiceList));
+
+  self->active_voices_size = 0;
+  self->inactive_voices_size = N_VOICES;
+
+  allocate_voices(self->inactive_voices);
   
   return (LV2_Handle)self;
 }
@@ -440,26 +461,13 @@ connect_port(LV2_Handle instance,
   }
 }
 
+/*
+ * LV2 Audio function, should not allocate resources to be Real-Time
+ * capable
+ */
 static void
 activate(LV2_Handle instance)
 {
-  SineSynth* self = (SineSynth*)instance;
-
-  self->active_voices = (VoiceList*)malloc(sizeof(VoiceList));
-  self->active_voices_size = 0;
-
-  self->inactive_voices = (VoiceList*)malloc(sizeof(VoiceList));
-  self->inactive_voices_size = N_VOICES;
-
-  VoiceList* current;
-  for (int i_voice = 0; i_voice < N_VOICES; i_voice++) {
-    Voice* voice = (Voice*)malloc(sizeof(Voice));
-
-    current->voice = voice;
-    current->next = self->inactive_voices;
-
-    self->inactive_voices = current;
-  }
 }
 
 static void
@@ -498,23 +506,26 @@ run(LV2_Handle instance, uint32_t n_samples)
   render_samples(samples_done, n_samples, self);
 }
 
+/*
+ * Free resources allocated on activate()
+ */
 static void
 deactivate(LV2_Handle instance)
 {
-  SineSynth* self = (SineSynth*)instance;
-
-  free_voice_list(self->active_voices);
-  free_voice_list(self->inactive_voices);
-
-  free(self);
 }
 
+/*
+ * Free resources allocated on instantiate()
+ */
 static void
 cleanup(LV2_Handle instance)
 {
   SineSynth* self = (SineSynth*)instance;
 
-  free(self->map);
+  free_voices(self->active_voices);
+  free_voices(self->inactive_voices);
+
+  free(self);
 }
 
 const void*
