@@ -26,13 +26,18 @@ Areas of Improvement
 
 ### Performance
 
-- Replace trigonometric function with wavetable
-- Render only active voices
+- Replace trigonometric function with wavetable lookup
+- Loop only through active voices on sample rendering
 
 ### Usability
 
-- Reduce ADSR parameters
+- Simplify ADSR parameters
+- Remove limit on active voice quantity
+
+### Sound
+
 - Test weird combinations of ADSR parameters and check if clicking is expected or not
+- Apply normalization on voice output if improvements are noticeable
 
 License
 -------
