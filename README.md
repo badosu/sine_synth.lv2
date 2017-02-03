@@ -6,7 +6,7 @@ The simplest good sounding sine synth I was able to make.
 Features
 --------
 
-- Polyphonic (number of voices defined at compile time)
+- Polyphonic (128 voices, defined at compile time)
 - ADSR Envelope
 - MIDI Input
 
@@ -27,12 +27,10 @@ Areas of Improvement
 ### Performance
 
 - Replace trigonometric function with wavetable lookup
-- Loop only through active voices on sample rendering
 
 ### Usability
 
 - Simplify ADSR parameters
-- Remove limit on active voice quantity
 
 ### Sound
 
