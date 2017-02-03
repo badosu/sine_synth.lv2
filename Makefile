@@ -9,6 +9,9 @@ $(BUNDLE): manifest.ttl sine_synth.ttl sine_synth.so
 
 all: $(BUNDLE)
 
+debug: CFLAGS += -DDEBUG -g
+debug: sine_synth.so
+
 sine_synth.so: sine_synth.c
 	gcc $< -o $@ $(CFLAGS)
 
@@ -24,4 +27,4 @@ uninstall:
 	rm -rf $(INSTALL_DIR)/$(BUNDLE)
 
 run:
-	jalv http://lv2plug.in/plugins/sine_synth
+	jalv http://bado.so/plugins/sine_synth

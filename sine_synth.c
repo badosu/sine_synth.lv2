@@ -85,10 +85,10 @@ typedef struct {
   VoiceStatus status;
 } Voice;
 
-typedef struct VoiceList {
+typedef struct VoiceNode {
   Voice* voice;
-  struct VoiceList* next;
-} VoiceList;
+  struct VoiceNode* next;
+} VoiceNode;
 
 typedef struct {
   double sample_rate;
@@ -113,9 +113,9 @@ typedef struct {
   float* out_left;
   float* out_right;
 
-  VoiceList* active_voices;
+  VoiceNode* active_voices;
   int active_voices_size;
-  VoiceList* inactive_voices;
+  VoiceNode* inactive_voices;
   int inactive_voices_size;
 
   LV2_URID_Map* map;
@@ -124,26 +124,6 @@ typedef struct {
     LV2_URID midi_MidiEvent;
   } uris;
 } SineSynth;
-
-static void
-deactivate_voice(Voice* voice, SineSynth* self) {
-  VoiceList* curr = self->active_voices;
-
-  while (curr != NULL) {
-    if (curr->voice == voice) {
-      self->inactive_voices = curr;
-      self->inactive_voices->next = self->inactive_voices;
-      self->inactive_voices_size++;
-
-      self->active_voices = self->active_voices->next;
-      self->active_voices_size--;
-
-      break;
-    }
-
-    curr = curr->next;
-  }
-}
 
 /*
  * Calculate adsr for current voice
@@ -171,12 +151,12 @@ adsr(Voice* voice, SineSynth* self) {
     break;
   case DECAY:
     if (voice->envelope_index > voice->decay_duration) {
-      if (voice->sustain_level != 0) {
+      if (voice->sustain_level > 0) {
         voice->status = SUSTAIN;
         voice->envelope_index = 0;
       }
       else {
-        deactivate_voice(voice, self); // Avoid processing SUSTAIN and RELEASE, would work without this
+        voice->velocity = 0; // Avoid processing SUSTAIN and RELEASE, would work without this
       }
 
       level = voice->sustain_level;
@@ -188,7 +168,7 @@ adsr(Voice* voice, SineSynth* self) {
     break;
   case RELEASE:
     if (voice->envelope_index > voice->release_duration) {
-      deactivate_voice(voice, self); // Avoid processing SUSTAIN and RELEASE, would work without this
+      voice->velocity = 0;
 
       level = 0;
     }
@@ -223,30 +203,30 @@ tick_voice(Voice* voice, SineSynth* self) {
   return val * voice->envelope_level;
 }
 
-static void allocate_voices(VoiceList* voices) {
-  VoiceList* head;
+static void allocate_voices(VoiceNode* voices) {
+  VoiceNode* head = voices;
 
   for (int i_voice = 0; i_voice < N_VOICES; i_voice++) {
-    Voice* voice = (Voice*)malloc(sizeof(Voice));
+    head->voice = (Voice*)malloc(sizeof(Voice));
+    head->next = (VoiceNode*)malloc(sizeof(VoiceNode));
 
-    voices->voice = voice;
-    voices->next = head;
-
-    head = voices;
+    head = head->next;
   }
 }
 
 static void
-free_voices(VoiceList* voices) {
-  VoiceList* curr = voices;
+free_voices(VoiceNode* voices) {
+  VoiceNode* head = voices;
 
-  while (curr != NULL) {
-    free(curr->voice);
+  while(head != NULL) {
+    free(head->voice);
 
-    curr = curr->next;
+    VoiceNode* next = head->next;
+
+    free(head);
+
+    head = next;
   }
-
-  free(voices);
 }
 
 /*
@@ -254,16 +234,16 @@ free_voices(VoiceList* voices) {
  */
 static Voice*
 get_active_voice(uint8_t note, SineSynth* self) {
-  VoiceList* curr = self->active_voices;
+  VoiceNode* head = self->active_voices;
 
-  while(curr != NULL) {
-    Voice* voice = curr->voice;
+  while(head != NULL) {
+    Voice* voice = head->voice;
 
     if (voice->note == note) {
       return voice;
     }
 
-    curr = curr->next;
+    head = head->next;
   }
 
   return NULL;
@@ -278,16 +258,17 @@ activate_voice(SineSynth* self) {
     return NULL;
   }
 
-  VoiceList* previous_active_voices = self->active_voices;
+  VoiceNode* previous_active_voices = self->active_voices;
+  VoiceNode* first_inactive = self->inactive_voices;
 
-  self->active_voices = self->inactive_voices;
+  self->inactive_voices = first_inactive->next;
+  self->inactive_voices_size--;
+
+  self->active_voices = first_inactive;
   self->active_voices->next = previous_active_voices;
   self->active_voices_size++;
 
-  self->inactive_voices = self->inactive_voices->next;
-  self->inactive_voices_size--;
-
-  return self->active_voices->voice;
+  return first_inactive->voice;
 }
 
 static void
@@ -344,18 +325,35 @@ render_samples(uint32_t from, uint32_t to, SineSynth* self) {
     out_right[pos] = 0;
     out_left[pos]  = 0;
 
-    VoiceList* curr = self->active_voices;
-    while (curr->voice != NULL) {
-      Voice* voice = curr->voice;
+    VoiceNode* head = self->active_voices;
+    VoiceNode* prev = NULL;
+    while (head != NULL) {
+      Voice* voice = head->voice;
 
       if (voice->velocity > 0) {
         float out = tick_voice(voice, self) * self->volume_coef;
 
         out_right[pos] += self->pan_right * out;
         out_left[pos]  += self->pan_left  * out;
-      }
 
-      curr = curr->next;
+        prev = head;
+        head = head->next;
+      }
+      else {
+        VoiceNode* next = head->next;
+
+        head->next = self->inactive_voices;
+        self->inactive_voices = head;
+
+        if (prev != NULL) {
+          prev->next = next;
+        }
+        else {
+          self->active_voices = next;
+        }
+
+        head = next;
+      }
     }
   }
 }
@@ -409,8 +407,8 @@ instantiate(const LV2_Descriptor*     descriptor,
   self->sample_rate    = rate;
   self->sample_rate_ms = rate / 1000.0;
 
-  self->active_voices = (VoiceList*)malloc(sizeof(VoiceList));
-  self->inactive_voices = (VoiceList*)malloc(sizeof(VoiceList));
+  self->active_voices = NULL;
+  self->inactive_voices = (VoiceNode*)malloc(sizeof(VoiceNode));
 
   self->active_voices_size = 0;
   self->inactive_voices_size = N_VOICES;

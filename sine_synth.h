@@ -7,6 +7,6 @@
 #include "lv2/lv2plug.in/ns/ext/midi/midi.h"
 #include "lv2/lv2plug.in/ns/ext/urid/urid.h"
 
-#define SINE_SYNTH_URI "http://lv2plug.in/plugins/sine_synth"
+#define SINE_SYNTH_URI "http://bado.so/plugins/sine_synth"
 
 #endif
