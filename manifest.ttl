@@ -1,0 +1,11 @@
+# Please see manifest.ttl.in in the eg-amp.lv2 example for details about
+# how manifest files work
+
+@prefix lv2:  <http://lv2plug.in/ns/lv2core#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ui: <http://lv2plug.in/ns/extensions/ui#> .
+
+<http://lv2plug.in/plugins/sine_synth>
+	a lv2:Plugin ;
+	lv2:binary <sine_synth.so>  ;
+	rdfs:seeAlso <sine_synth.ttl> .
