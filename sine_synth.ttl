@@ -1,18 +1,24 @@
 @prefix atom:  <http://lv2plug.in/ns/ext/atom#> .
 @prefix doap: <http://usefulinc.com/ns/doap#> .
+@prefix foaf:  <http://xmlns.com/foaf/0.1/> .
 @prefix lv2: <http://lv2plug.in/ns/lv2core#> .
 @prefix midi:  <http://lv2plug.in/ns/ext/midi#> .
 @prefix urid:  <http://lv2plug.in/ns/ext/urid#> .
 @prefix units: <http://lv2plug.in/ns/extensions/units#> .
 
-<http://lv2plug.in/plugins/sine_synth>
+<http://bado.so/plugins/sine_synth>
 	a lv2:Plugin ,
 		lv2:InstrumentPlugin ;
-	doap:maintainer <http://bado.so> ;
 	doap:name "Sine Synth";
   doap:creator "Amadeus Folego";
+  doap:maintainer [
+    foaf:name "badosu" ;
+    foaf:homepage <https://github.com/badosu/sine_synth.lv2> ;
+    foaf:mbox <amadeusfolego@gmail.com> ;
+  ] ;
 	doap:license <http://opensource.org/licenses/GPL-3.0> ;
   lv2:requiredFeature urid:map;
+  lv2:optionalFeature lv2:hardRTCapable ;
   
 	lv2:port [
     a lv2:InputPort ,
