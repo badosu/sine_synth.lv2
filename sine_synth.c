@@ -128,7 +128,8 @@ typedef struct {
 static void
 deactivate_voice(Voice* voice, SineSynth* self) {
   VoiceList* curr = self->active_voices;
-  for (int i_voice = 0; i_voice < self->active_voices_size; i_voice++) {
+
+  while (curr != NULL) {
     if (curr->voice == voice) {
       self->inactive_voices = curr;
       self->inactive_voices->next = self->inactive_voices;
@@ -222,6 +223,19 @@ tick_voice(Voice* voice, SineSynth* self) {
   return val * voice->envelope_level;
 }
 
+static void
+free_voice_list(VoiceList* voice_list) {
+  VoiceList* curr = voice_list;
+
+  while (curr != NULL) {
+    free(curr->voice);
+
+    curr = curr->next;
+  }
+
+  free(voice_list);
+}
+
 /*
  * Get active voice assigned to note
  */
@@ -229,7 +243,7 @@ static Voice*
 get_active_voice(uint8_t note, SineSynth* self) {
   VoiceList* curr = self->active_voices;
 
-  for (int i_voice = 0; i_voice < self->active_voices_size; i_voice++) {
+  while(curr != NULL) {
     Voice* voice = curr->voice;
 
     if (voice->note == note) {
@@ -299,7 +313,7 @@ note_on(uint8_t note, uint8_t velocity, SineSynth* self) {
 
 static void
 note_off(uint8_t note, SineSynth* self) {
-  Voice* voice = get_active_voice(self, note);
+  Voice* voice = get_active_voice(note, self);
 
   if (voice != NULL) {
     voice->status = RELEASE;
@@ -318,7 +332,7 @@ render_samples(uint32_t from, uint32_t to, SineSynth* self) {
     out_left[pos]  = 0;
 
     VoiceList* curr = self->active_voices;
-    for (int i_voice = 0; i_voice < self->active_voices_size; i_voice++) {
+    while (curr != NULL) {
       Voice* voice = curr->voice;
 
       if (voice->velocity > 0) {
@@ -487,12 +501,20 @@ run(LV2_Handle instance, uint32_t n_samples)
 static void
 deactivate(LV2_Handle instance)
 {
+  SineSynth* self = (SineSynth*)instance;
+
+  free_voice_list(self->active_voices);
+  free_voice_list(self->inactive_voices);
+
+  free(self);
 }
 
 static void
 cleanup(LV2_Handle instance)
 {
-  free(instance);
+  SineSynth* self = (SineSynth*)instance;
+
+  free(self->map);
 }
 
 const void*
