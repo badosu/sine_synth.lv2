@@ -5,7 +5,7 @@
 #include "sine_synth.h"
 
 #define DB_CO(g) ((g) > -90.0f ? powf(10.0f, (g) * 0.05f) : 0.0f)
-#define N_VOICES (128)
+#define N_VOICES (16)
 #define PI (3.14159265358979323846)
 #define TWO_PI (2 * PI)
 #define PIOVR2 (PI/2)
@@ -89,11 +89,6 @@ typedef struct {
   VoiceStatus status;
 } Voice;
 
-typedef struct VoiceNode {
-  Voice* voice;
-  struct VoiceNode* next;
-} VoiceNode;
-
 typedef struct {
   double sample_rate;
   double sample_rate_ms;
@@ -119,8 +114,7 @@ typedef struct {
   float* out_left;
   float* out_right;
 
-  VoiceNode* active_voices;
-  VoiceNode* inactive_voices;
+  Voice* voices[N_VOICES];
 
   LV2_URID_Map* map;
 
@@ -221,47 +215,17 @@ tick_voice(Voice* voice, SineSynth* self) {
   return val * voice->envelope_level;
 }
 
-static void allocate_voices(VoiceNode* voices) {
-  VoiceNode* head = voices;
-
-  for (int i_voice = 0; i_voice < N_VOICES; i_voice++) {
-    head->voice = (Voice*)malloc(sizeof(Voice));
-    head->next = (VoiceNode*)malloc(sizeof(VoiceNode));
-
-    head = head->next;
-  }
-}
-
-static void
-free_voices(VoiceNode* voices) {
-  VoiceNode* head = voices;
-
-  while(head != NULL) {
-    free(head->voice);
-
-    VoiceNode* next = head->next;
-
-    free(head);
-
-    head = next;
-  }
-}
-
 /*
  * Get active voice assigned to note
  */
 static Voice*
 get_active_voice(uint8_t note, SineSynth* self) {
-  VoiceNode* head = self->active_voices;
+  for(int i_voice=0; i_voice < N_VOICES; i_voice++) {
+    Voice* voice = self->voices[i_voice];
 
-  while(head != NULL) {
-    Voice* voice = head->voice;
-
-    if (voice->note == note) {
+    if (voice->note == note && voice->velocity > 0) {
       return voice;
     }
-
-    head = head->next;
   }
 
   return NULL;
@@ -272,19 +236,15 @@ get_active_voice(uint8_t note, SineSynth* self) {
  */
 static Voice*
 activate_voice(SineSynth* self) {
-  if (self->inactive_voices == NULL) {
-    return NULL;
+  for(int i_voice=0; i_voice < N_VOICES; i_voice++) {
+    Voice* voice = self->voices[i_voice];
+
+    if (voice->velocity == 0) {
+      return voice;
+    }
   }
 
-  VoiceNode* previous_active_voices = self->active_voices;
-  VoiceNode* first_inactive = self->inactive_voices;
-
-  self->inactive_voices = first_inactive->next;
-
-  self->active_voices = first_inactive;
-  self->active_voices->next = previous_active_voices;
-
-  return first_inactive->voice;
+  return NULL;
 }
 
 static void
@@ -342,34 +302,14 @@ render_samples(uint32_t from, uint32_t to, SineSynth* self) {
     out_right[pos] = 0;
     out_left[pos]  = 0;
 
-    VoiceNode* head = self->active_voices;
-    VoiceNode* prev = NULL;
-    while (head != NULL) {
-      Voice* voice = head->voice;
+    for(int i_voice=0; i_voice < N_VOICES; i_voice++) {
+      Voice* voice = self->voices[i_voice];
 
       if (voice->velocity > 0) {
         float out = tick_voice(voice, self) * self->volume_coef;
 
         out_right[pos] += self->pan_right * out;
         out_left[pos]  += self->pan_left  * out;
-
-        prev = head;
-        head = head->next;
-      }
-      else {
-        VoiceNode* next = head->next;
-
-        head->next = self->inactive_voices;
-        self->inactive_voices = head;
-
-        if (prev != NULL) {
-          prev->next = next;
-        }
-        else {
-          self->active_voices = next;
-        }
-
-        head = next;
       }
     }
   }
@@ -425,10 +365,13 @@ instantiate(const LV2_Descriptor*     descriptor,
   self->sample_rate    = rate;
   self->sample_rate_ms = rate / 1000.0;
 
-  self->active_voices = NULL;
-  self->inactive_voices = (VoiceNode*)malloc(sizeof(VoiceNode));
+  for (int i_voice = 0; i_voice < N_VOICES; i_voice++) {
+    Voice* voice = (Voice*)malloc(sizeof(Voice));
 
-  allocate_voices(self->inactive_voices);
+    voice->velocity = 0;
+
+    self->voices[i_voice] = voice;
+  }
   
   return (LV2_Handle)self;
 }
@@ -538,8 +481,9 @@ cleanup(LV2_Handle instance)
 {
   SineSynth* self = (SineSynth*)instance;
 
-  free_voices(self->active_voices);
-  free_voices(self->inactive_voices);
+  for (int i_voice = 0; i_voice < N_VOICES; i_voice++) {
+    free(self->voices[i_voice]);
+  }
 
   free(self);
 }
