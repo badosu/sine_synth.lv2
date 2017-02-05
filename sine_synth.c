@@ -5,7 +5,7 @@
 #include "sine_synth.h"
 
 #define DB_CO(g) ((g) > -90.0f ? powf(10.0f, (g) * 0.05f) : 0.0f)
-#define N_VOICES (16)
+#define N_VOICES (56)
 #define PI (3.14159265358979323846)
 #define TWO_PI (2 * PI)
 #define PIOVR2 (PI/2)
