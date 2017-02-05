@@ -114,9 +114,7 @@ typedef struct {
   float* out_right;
 
   VoiceNode* active_voices;
-  int active_voices_size;
   VoiceNode* inactive_voices;
-  int inactive_voices_size;
 
   LV2_URID_Map* map;
 
@@ -262,11 +260,9 @@ activate_voice(SineSynth* self) {
   VoiceNode* first_inactive = self->inactive_voices;
 
   self->inactive_voices = first_inactive->next;
-  self->inactive_voices_size--;
 
   self->active_voices = first_inactive;
   self->active_voices->next = previous_active_voices;
-  self->active_voices_size++;
 
   return first_inactive->voice;
 }
@@ -409,9 +405,6 @@ instantiate(const LV2_Descriptor*     descriptor,
 
   self->active_voices = NULL;
   self->inactive_voices = (VoiceNode*)malloc(sizeof(VoiceNode));
-
-  self->active_voices_size = 0;
-  self->inactive_voices_size = N_VOICES;
 
   allocate_voices(self->inactive_voices);
   
