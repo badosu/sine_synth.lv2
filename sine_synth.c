@@ -52,6 +52,7 @@ typedef enum {
   PORT_PANNING,
   PORT_ATTACK_LEVEL,
   PORT_ATTACK_TIME,
+  PORT_HOLD_TIME,
   PORT_SUSTAIN_LEVEL,
   PORT_DECAY_TIME,
   PORT_RELEASE_TIME,
@@ -61,6 +62,7 @@ typedef enum {
 
 typedef enum {
   ATTACK = 0,
+  HOLD,
   DECAY,
   SUSTAIN,
   RELEASE
@@ -76,10 +78,12 @@ typedef struct {
   float envelope_level;
   float released_envelope_level;
 
-  float attack_duration;
   float attack_level;
-  float decay_duration;
   float sustain_level;
+
+  float attack_duration;
+  float hold_duration;
+  float decay_duration;
   float release_duration;
 
   VoiceStatus status;
@@ -99,6 +103,7 @@ typedef struct {
   const float* panning;
   const float* attack_level;
   const float* attack_time;
+  const float* hold_time;
   const float* sustain_level;
   const float* decay_time;
   const float* release_time;
@@ -107,6 +112,7 @@ typedef struct {
   float pan_left;
   float pan_right;
   float attack_duration;
+  float hold_duration;
   float decay_duration;
   float release_duration;
 
@@ -137,7 +143,12 @@ adsr(Voice* voice, SineSynth* self) {
     break;
   case ATTACK:
     if (voice->envelope_index > voice->attack_duration) {
-      voice->status = DECAY;
+      if (voice->hold_duration > 0) {
+        voice->status = HOLD;
+      }
+      else {
+        voice->status = DECAY;
+      }
       voice->envelope_index = 0;
 
       level = voice->attack_level;
@@ -145,6 +156,15 @@ adsr(Voice* voice, SineSynth* self) {
     else {
       level = voice->envelope_index * (voice->attack_level / voice->attack_duration);
     }
+
+    break;
+  case HOLD:
+    if (voice->envelope_index > voice->hold_duration) {
+      voice->status = DECAY;
+      voice->envelope_index = 0;
+    }
+
+    level = voice->attack_level;
 
     break;
   case DECAY:
@@ -294,10 +314,11 @@ note_on(uint8_t note, uint8_t velocity, SineSynth* self) {
     voice->released_envelope_level = 0;
 
     voice->attack_level = *self->attack_level;
-    voice->sustain_level = *self->sustain_level;
     voice->attack_duration = self->attack_duration;
+    voice->hold_duration = self->hold_duration;
     voice->decay_duration = self->decay_duration;
     voice->release_duration = self->release_duration;
+    voice->sustain_level = *self->sustain_level;
   }
 }
 
@@ -361,6 +382,7 @@ render_samples(uint32_t from, uint32_t to, SineSynth* self) {
 static void
 recalculate_params(SineSynth* self) {
   self->attack_duration  = (*self->attack_time)  * self->sample_rate_ms;
+  self->hold_duration    = (*self->hold_time)    * self->sample_rate_ms;
   self->decay_duration   = (*self->decay_time)   * self->sample_rate_ms;
   self->release_duration = (*self->release_time) * self->sample_rate_ms;
 
@@ -433,6 +455,9 @@ connect_port(LV2_Handle instance,
     break;
   case PORT_ATTACK_TIME:
     self->attack_time = (const float*)data;
+    break;
+  case PORT_HOLD_TIME:
+    self->hold_time = (const float*)data;
     break;
   case PORT_SUSTAIN_LEVEL:
     self->sustain_level = (const float*)data;
