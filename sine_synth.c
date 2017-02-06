@@ -347,9 +347,11 @@ recalculate_params(SineSynth* self) {
   self->volume_coef = DB_CO(*(self->volume));
 
   float angle     = (*(self->panning)) * PIOVR2 * 0.5 + PI;
-  float cos_angle = angle + PIOVR2;
-  self->pan_left  = ROOT2OVR2 * (sin_table(cos_angle, self) - sin_table(angle, self));
-  self->pan_right = ROOT2OVR2 * (sin_table(cos_angle, self) + sin_table(angle, self));
+  float sin_angle = sin_table(angle, self);
+  float cos_angle = sin_table(angle + PIOVR2, self);
+
+  self->pan_left  = ROOT2OVR2 * (cos_angle - sin_angle);
+  self->pan_right = ROOT2OVR2 * (cos_angle + sin_angle);
 }
 
 /* -----------------
