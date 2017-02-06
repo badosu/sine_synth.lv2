@@ -1,7 +1,7 @@
 Sine Synth
 ===========
 
-The simplest efficient, good sounding sine synth I was able to make.
+A very simple, efficient, good sounding, sine synth.
 
 Features
 --------
@@ -13,7 +13,7 @@ Features
 Install
 -------
 
-Just `make` and `sudo make install`, that should install the bundle at `/usr/local/lib/lv2`.
+Just `make` and `sudo make install`, this should install the bundle at `/usr/local/lib/lv2`.
 
 Motivation
 ----------
