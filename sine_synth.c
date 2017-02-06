@@ -70,8 +70,8 @@ typedef enum {
 } VoiceStatus;
 
 typedef struct {
-  int note;
-  int velocity;
+  uint8_t note;
+  uint8_t velocity;
   float phase;
   float phase_increment;
 
@@ -119,8 +119,8 @@ typedef struct {
   float wave_table_increment;
 
   Voice* voices[N_VOICES];
-  int active_voices_i[128];
-  int active_voices_n;
+  uint8_t active_voices_i[128];
+  uint8_t active_voices_n;
 
   LV2_URID_Map* map;
 
@@ -133,7 +133,7 @@ typedef struct {
  * Calculate adsr for current voice
  */
 static float
-adsr(Voice* voice, SineSynth* self) {
+adsr(Voice* voice) {
   float level;
 
   switch(voice->status) {
@@ -226,7 +226,7 @@ tick_voice(Voice* voice, SineSynth* self) {
     voice->phase -= TWO_PI;
   }
 
-  voice->envelope_level = adsr(voice, self);
+  voice->envelope_level = adsr(voice);
 
   if (voice->status != SUSTAIN) {
     voice->envelope_index++;
@@ -325,9 +325,8 @@ render_samples(uint32_t from, uint32_t to, SineSynth* self) {
     out_right[pos] = 0;
     out_left[pos]  = 0;
 
-    int i_voice = 0;
-    for(int i_voice=0; i_voice < self->active_voices_n; i_voice++) {
-      int ai_voice = self->active_voices_i[i_voice];
+    for(uint8_t i_voice=0; i_voice < self->active_voices_n; i_voice++) {
+      uint8_t ai_voice = self->active_voices_i[i_voice];
       Voice* voice = self->voices[ai_voice];
 
       if (voice->velocity > 0) {
@@ -339,7 +338,7 @@ render_samples(uint32_t from, uint32_t to, SineSynth* self) {
       else {
         self->active_voices_n--;
 
-        for(int i = i_voice; i < self->active_voices_n; i++) {
+        for(uint8_t i = i_voice; i < self->active_voices_n; i++) {
           self->active_voices_i[i] = self->active_voices_i[i+1];
         }
       }
@@ -400,7 +399,7 @@ instantiate(const LV2_Descriptor*     descriptor,
   self->sample_rate    = rate;
   self->sample_rate_ms = rate / 1000.0;
 
-  for (int i_voice = 0; i_voice < N_VOICES; i_voice++) {
+  for (uint8_t i_voice = 0; i_voice < N_VOICES; i_voice++) {
     Voice* voice = (Voice*)malloc(sizeof(Voice));
 
     voice->velocity = 0;
@@ -520,7 +519,7 @@ cleanup(LV2_Handle instance)
 {
   SineSynth* self = (SineSynth*)instance;
 
-  for (int i_voice = 0; i_voice < N_VOICES; i_voice++) {
+  for (uint8_t i_voice = 0; i_voice < N_VOICES; i_voice++) {
     free(self->voices[i_voice]);
   }
 
