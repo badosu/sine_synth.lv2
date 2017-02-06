@@ -26,7 +26,6 @@ Areas of Improvement
 
 ### Performance
 
-- Replace trigonometric function with wavetable lookup
 - Optimize voice activity check
 
 ### Usability

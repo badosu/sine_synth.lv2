@@ -6,11 +6,12 @@
 
 #define DB_CO(g) ((g) > -90.0f ? powf(10.0f, (g) * 0.05f) : 0.0f)
 #define N_VOICES (56)
+#define N_TABLE_SIZE (2048)
 #define PI (3.14159265358979323846)
 #define TWO_PI (2 * PI)
 #define PIOVR2 (PI/2)
 #define ROOT2OVR2 (sqrt(2) * 0.5)
-  
+
 const float MIDI_NOTES[128] = {
   8.1757989156, 8.6619572180, 9.1770239974, 9.7227182413, 10.3008611535,
   10.9133822323, 11.5623257097, 12.2498573744, 12.9782717994,
@@ -114,6 +115,9 @@ typedef struct {
   float* out_left;
   float* out_right;
 
+  float wave_table[N_TABLE_SIZE];
+  float wave_table_increment;
+
   Voice* voices[N_VOICES];
 
   LV2_URID_Map* map;
@@ -194,15 +198,29 @@ adsr(Voice* voice, SineSynth* self) {
   return level;
 }
 
+static void
+fill_wave_table(SineSynth* self) {
+  self->wave_table_increment = TWO_PI/N_TABLE_SIZE;
+
+  for(int i=0; i<N_TABLE_SIZE; i++) {
+    self->wave_table[i] = sin(i * self->wave_table_increment);
+  }
+}
+
+static float
+sin_table(float phase, SineSynth* self) {
+  return self->wave_table[(int)roundf(phase/self->wave_table_increment)];
+}
+
 /*
  * Render a voice sample
  */
 static float
 tick_voice(Voice* voice, SineSynth* self) {
-  float val = sin(voice->phase);
+  float val = sin_table(voice->phase, self);
 
   voice->phase += voice->phase_increment;
-  if ( voice->phase > TWO_PI ) {
+  if (voice->phase > TWO_PI) {
     voice->phase -= TWO_PI;
   }
 
@@ -328,9 +346,10 @@ recalculate_params(SineSynth* self) {
 
   self->volume_coef = DB_CO(*(self->volume));
 
-  float angle     = (*(self->panning)) * PIOVR2 * 0.5;
-  self->pan_left  = ROOT2OVR2 * (cos(angle) - sin(angle));
-  self->pan_right = ROOT2OVR2 * (cos(angle) + sin(angle));
+  float angle     = (*(self->panning)) * PIOVR2 * 0.5 + PI;
+  float cos_angle = angle + PIOVR2;
+  self->pan_left  = ROOT2OVR2 * (sin_table(cos_angle, self) - sin_table(angle, self));
+  self->pan_right = ROOT2OVR2 * (sin_table(cos_angle, self) + sin_table(angle, self));
 }
 
 /* -----------------
@@ -372,6 +391,8 @@ instantiate(const LV2_Descriptor*     descriptor,
 
     self->voices[i_voice] = voice;
   }
+
+  fill_wave_table(self);
   
   return (LV2_Handle)self;
 }
