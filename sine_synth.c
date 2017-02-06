@@ -5,7 +5,7 @@
 #include "sine_synth.h"
 
 #define DB_CO(g) ((g) > -90.0f ? powf(10.0f, (g) * 0.05f) : 0.0f)
-#define N_VOICES (56)
+#define N_VOICES (128)
 #define N_TABLE_SIZE (2048)
 #define PI (3.14159265358979323846)
 #define TWO_PI (2 * PI)
@@ -119,6 +119,8 @@ typedef struct {
   float wave_table_increment;
 
   Voice* voices[N_VOICES];
+  int active_voices_i[128];
+  int active_voices_n;
 
   LV2_URID_Map* map;
 
@@ -238,10 +240,11 @@ tick_voice(Voice* voice, SineSynth* self) {
  */
 static Voice*
 get_active_voice(uint8_t note, SineSynth* self) {
-  for(int i_voice=0; i_voice < N_VOICES; i_voice++) {
-    Voice* voice = self->voices[i_voice];
+  for(int i_voice=0; i_voice < self->active_voices_n; i_voice++) {
+    int ai_voice = self->active_voices_i[i_voice];
+    Voice* voice = self->voices[ai_voice];
 
-    if (voice->note == note && voice->velocity > 0) {
+    if (voice->note == note) {
       return voice;
     }
   }
@@ -258,6 +261,8 @@ activate_voice(SineSynth* self) {
     Voice* voice = self->voices[i_voice];
 
     if (voice->velocity == 0) {
+      self->active_voices_i[self->active_voices_n++] = i_voice;
+
       return voice;
     }
   }
@@ -320,14 +325,23 @@ render_samples(uint32_t from, uint32_t to, SineSynth* self) {
     out_right[pos] = 0;
     out_left[pos]  = 0;
 
-    for(int i_voice=0; i_voice < N_VOICES; i_voice++) {
-      Voice* voice = self->voices[i_voice];
+    int i_voice = 0;
+    for(int i_voice=0; i_voice < self->active_voices_n; i_voice++) {
+      int ai_voice = self->active_voices_i[i_voice];
+      Voice* voice = self->voices[ai_voice];
 
       if (voice->velocity > 0) {
         float out = tick_voice(voice, self) * self->volume_coef;
 
         out_right[pos] += self->pan_right * out;
         out_left[pos]  += self->pan_left  * out;
+      }
+      else {
+        self->active_voices_n--;
+
+        for(int i = i_voice; i < self->active_voices_n; i++) {
+          self->active_voices_i[i] = self->active_voices_i[i+1];
+        }
       }
     }
   }
@@ -393,6 +407,8 @@ instantiate(const LV2_Descriptor*     descriptor,
 
     self->voices[i_voice] = voice;
   }
+
+  self->active_voices_n = 0;
 
   fill_wave_table(self);
   
