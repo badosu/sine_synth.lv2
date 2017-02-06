@@ -8,16 +8,19 @@
 
 <http://bado.so/plugins/sine_synth>
 	a lv2:Plugin ,
-		lv2:InstrumentPlugin ;
-	doap:name "Sine Synth";
-  doap:creator "Amadeus Folego";
+	  lv2:InstrumentPlugin,
+	  doap:Project ;
+  doap:name "Sine Synth" ;
+  doap:creator "Amadeus Folego" ;
+  doap:shortdesc "A very simple, efficient and good sounding sine synth" ;
+  doap:description "A MIDI capable wavetable Sine Synthesizer. Featuring ADSR amplitude envelope, panning and 128 voices polyphony." ;
   doap:maintainer [
-    foaf:name "badosu" ;
+    foaf:name "Amadeus Folego" ;
     foaf:homepage <https://github.com/badosu/sine_synth.lv2> ;
     foaf:mbox <amadeusfolego@gmail.com> ;
   ] ;
 	doap:license <http://opensource.org/licenses/GPL-3.0> ;
-  lv2:requiredFeature urid:map;
+  lv2:requiredFeature urid:map ;
   lv2:optionalFeature lv2:hardRTCapable ;
   
 	lv2:port [

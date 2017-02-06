@@ -1,7 +1,7 @@
 Sine Synth
 ===========
 
-A very simple, efficient, good sounding, sine synth.
+A very simple, efficient and good sounding sine synth.
 
 Features
 --------
