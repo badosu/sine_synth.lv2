@@ -119,7 +119,7 @@ typedef struct {
   float wave_table_increment;
 
   Voice* voices[N_VOICES];
-  uint8_t active_voices_i[128];
+  uint8_t active_voices_i[N_VOICES];
   uint8_t active_voices_n;
 
   LV2_URID_Map* map;

@@ -1,0 +1,6 @@
+[submodule "third_party/rutabaga"]
+	path = third_party/rutabaga
+	url = https://github.com/wrl/rutabaga.git
+[submodule "third_party/lv2"]
+	path = third_party/lv2
+	url = https://github.com/drobilla/lv2.git
