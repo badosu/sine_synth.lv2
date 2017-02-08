@@ -10,16 +10,17 @@
 	a lv2:Plugin ,
 	  lv2:InstrumentPlugin,
 	  doap:Project ;
+
   doap:name "Sine Synth" ;
-  doap:creator "Amadeus Folego" ;
   doap:shortdesc "A very simple, efficient and good sounding sine synth" ;
   doap:description "A MIDI capable wavetable Sine Synthesizer. Featuring ADSR amplitude envelope, panning and 128 voices polyphony." ;
   doap:maintainer [
     foaf:name "Amadeus Folego" ;
     foaf:homepage <https://github.com/badosu/sine_synth.lv2> ;
-    foaf:mbox <amadeusfolego@gmail.com> ;
+    foaf:mbox <mailto:amadeusfolego@gmail.com> ;
   ] ;
 	doap:license <http://opensource.org/licenses/GPL-3.0> ;
+
   lv2:requiredFeature urid:map ;
   lv2:optionalFeature lv2:hardRTCapable ;
   
@@ -55,17 +56,6 @@
     a lv2:InputPort ;
     a lv2:ControlPort ;
     lv2:index 3 ;
-    lv2:symbol "attack_level" ;
-    lv2:name "Attack Level";
-    lv2:default 1.2;
-    lv2:minimum 1;
-    lv2:maximum 8;
-
-    units:unit units:coef;
-  ] , [
-    a lv2:InputPort ;
-    a lv2:ControlPort ;
-    lv2:index 4 ;
     lv2:symbol "attack_time" ;
     lv2:name "Attack";
     lv2:default 25;
@@ -77,7 +67,7 @@
   ] , [
     a lv2:InputPort ;
     a lv2:ControlPort ;
-    lv2:index 5 ;
+    lv2:index 4 ;
     lv2:symbol "hold_time" ;
     lv2:name "Hold";
     lv2:default 0;
@@ -89,18 +79,18 @@
   ] , [
     a lv2:InputPort ;
     a lv2:ControlPort ;
-    lv2:index 6 ;
+    lv2:index 5 ;
     lv2:symbol "sustain_level" ;
     lv2:name "Sustain";
-    lv2:default 1;
+    lv2:default 0.7;
     lv2:minimum 0;
-    lv2:maximum 8;
+    lv2:maximum 1;
 
     units:unit units:coef;
   ] , [
     a lv2:InputPort ;
     a lv2:ControlPort ;
-    lv2:index 7 ;
+    lv2:index 6 ;
     lv2:symbol "decay_time" ;
     lv2:name "Decay";
     lv2:default 25;
@@ -112,7 +102,7 @@
   ] , [
     a lv2:InputPort ;
     a lv2:ControlPort ;
-    lv2:index 8 ;
+    lv2:index 7 ;
     lv2:symbol "release_time" ;
     lv2:name "Release";
     lv2:default 100;
@@ -124,13 +114,13 @@
   ] , [
 		a lv2:AudioPort ,
 			lv2:OutputPort ;
-		lv2:index 9 ;
+		lv2:index 8 ;
 		lv2:symbol "out_left" ;
 		lv2:name "Out Left" ;
   ] , [
 		a lv2:AudioPort ,
 			lv2:OutputPort ;
-		lv2:index 10 ;
+		lv2:index 9 ;
 		lv2:symbol "out_right" ;
 		lv2:name "Out Right" ;
 	] .

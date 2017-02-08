@@ -11,6 +11,7 @@
 #define TWO_PI (2 * PI)
 #define PIOVR2 (PI/2)
 #define ROOT2OVR2 (sqrt(2) * 0.5)
+#define TABLE_INCREMENT (TWO_PI/N_TABLE_SIZE)
 
 const float MIDI_NOTES[128] = {
   8.1757989156, 8.6619572180, 9.1770239974, 9.7227182413, 10.3008611535,
@@ -51,7 +52,6 @@ typedef enum {
   PORT_MIDI_IN = 0,
   PORT_VOLUME,
   PORT_PANNING,
-  PORT_ATTACK_LEVEL,
   PORT_ATTACK_TIME,
   PORT_HOLD_TIME,
   PORT_SUSTAIN_LEVEL,
@@ -97,7 +97,6 @@ typedef struct {
   const LV2_Atom_Sequence* control;
   const float* volume;
   const float* panning;
-  const float* attack_level;
   const float* attack_time;
   const float* hold_time;
   const float* sustain_level;
@@ -116,7 +115,6 @@ typedef struct {
   float* out_right;
 
   float wave_table[N_TABLE_SIZE];
-  float wave_table_increment;
 
   Voice* voices[N_VOICES];
   uint8_t active_voices_i[N_VOICES];
@@ -202,16 +200,14 @@ adsr(Voice* voice) {
 
 static void
 fill_wave_table(SineSynth* self) {
-  self->wave_table_increment = TWO_PI/N_TABLE_SIZE;
-
   for(int i=0; i<N_TABLE_SIZE; i++) {
-    self->wave_table[i] = sin(i * self->wave_table_increment);
+    self->wave_table[i] = sin(i * TABLE_INCREMENT);
   }
 }
 
 static float
 sin_table(float phase, SineSynth* self) {
-  return self->wave_table[(int)roundf(phase/self->wave_table_increment)];
+  return self->wave_table[(int)roundf(phase/TABLE_INCREMENT)];
 }
 
 /*
@@ -296,7 +292,7 @@ note_on(uint8_t note, uint8_t velocity, SineSynth* self) {
     voice->envelope_index = 0;
     voice->released_envelope_level = 0;
 
-    voice->attack_level = *self->attack_level;
+    voice->attack_level = 1;
     voice->attack_duration = self->attack_duration;
     voice->hold_duration = self->hold_duration;
     voice->decay_duration = self->decay_duration;
@@ -430,9 +426,6 @@ connect_port(LV2_Handle instance,
     break;
   case PORT_PANNING:
     self->panning = (const float*)data;
-    break;
-  case PORT_ATTACK_LEVEL:
-    self->attack_level = (const float*)data;
     break;
   case PORT_ATTACK_TIME:
     self->attack_time = (const float*)data;

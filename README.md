@@ -24,10 +24,6 @@ Motivation
 Areas of Improvement
 --------------------
 
-### Usability
-
-- Simplify ADSR parameters
-
 ### Sound
 
 - Test weird combinations of ADSR parameters and check if clicking is expected or not
