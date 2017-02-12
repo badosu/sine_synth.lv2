@@ -1,4 +1,3 @@
-
 @prefix lv2:  <http://lv2plug.in/ns/lv2core#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix ui: <http://lv2plug.in/ns/extensions/ui#> .
@@ -7,3 +6,10 @@
 	a lv2:Plugin ;
 	lv2:binary <sine_synth.so> ;
 	rdfs:seeAlso <sine_synth.ttl> .
+
+<http://bado.so/plugins/sine_synth#ui>
+  a ui:X11UI ;
+  ui:binary <sine_synth_gui.so> ;
+  lv2:optionalFeature ui:fixedSize ;
+  lv2:optionalFeature ui:noUserResize ;
+  rdfs:seeAlso <sine_synth.ttl> .

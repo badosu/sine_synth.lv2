@@ -5,8 +5,24 @@
 @prefix midi:  <http://lv2plug.in/ns/ext/midi#> .
 @prefix urid:  <http://lv2plug.in/ns/ext/urid#> .
 @prefix units: <http://lv2plug.in/ns/extensions/units#> .
+@prefix ui: <http://lv2plug.in/ns/extensions/ui#> .
+@prefix pg: <http://lv2plug.in/ns/ext/port-groups#> .
 
-<http://bado.so/plugins/sine_synth>
+@prefix badosu: <http://bado.so/badosu#me> .
+@prefix sine_synth: <http://bado.so/plugins/sine_synth> .
+
+badosu:
+	a foaf:Person ;
+	foaf:name "Amadeus Folego" ;
+	foaf:mbox <mailto:amadeusfolego@gmail.com> .
+
+sine_synth:mainOut
+	a pg:StereoGroup ,
+		pg:OutputGroup ;
+	lv2:name "Output" ;
+	lv2:symbol "out" .
+
+sine_synth:
 	a lv2:Plugin ,
 	  lv2:InstrumentPlugin,
 	  doap:Project ;
@@ -14,15 +30,17 @@
   doap:name "Sine Synth" ;
   doap:shortdesc "A very simple, efficient and good sounding sine synth" ;
   doap:description "A MIDI capable wavetable Sine Synthesizer. Featuring ADSR amplitude envelope, panning and 128 voices polyphony." ;
-  doap:maintainer [
-    foaf:name "Amadeus Folego" ;
-    foaf:homepage <https://github.com/badosu/sine_synth.lv2> ;
-    foaf:mbox <mailto:amadeusfolego@gmail.com> ;
-  ] ;
+  doap:homepage <https://github.com/badosu/sine_synth.lv2> ;
 	doap:license <http://opensource.org/licenses/GPL-3.0> ;
+  doap:maintainer <http://bado.so/badosu#me> ;
+  doap:developer <http://bado.so/badosu#me> ;
+
+  ui:ui <http://bado.so/plugins/sine_synth#ui> ;
 
   lv2:requiredFeature urid:map ;
   lv2:optionalFeature lv2:hardRTCapable ;
+
+	pg:mainOutput sine_synth:mainOut ;
   
 	lv2:port [
     a lv2:InputPort ,
@@ -117,10 +135,14 @@
 		lv2:index 8 ;
 		lv2:symbol "out_left" ;
 		lv2:name "Out Left" ;
+    lv2:designation pg:left ;
+    pg:group sine_synth:mainOut
   ] , [
 		a lv2:AudioPort ,
 			lv2:OutputPort ;
 		lv2:index 9 ;
 		lv2:symbol "out_right" ;
 		lv2:name "Out Right" ;
+    lv2:designation pg:right ;
+    pg:group sine_synth:mainOut
 	] .
