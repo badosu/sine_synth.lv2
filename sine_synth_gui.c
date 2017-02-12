@@ -160,6 +160,11 @@ build_ui(SineSynthGui* gui) {
   rtb_container_add(win, lower);
 }
 
+static void
+control_set_value(Control* control, float value) {
+  rtb_value_element_set_value(RTB_VALUE_ELEMENT(control->knob), value);
+}
+
 static int
 idle(LV2UI_Handle handle)
 {
@@ -254,26 +259,26 @@ port_event(LV2UI_Handle ui,
 
   switch((PortIndex)port_index) {
   case PORT_VOLUME: 
-    rtb_value_element_set_value(RTB_VALUE_ELEMENT(gui->volume->knob), *pval);
+    control_set_value(gui->volume, *pval);
     break;
-  //case PORT_PANNING:
-  //  rtb_value_element_set_value(RTB_VALUE_ELEMENT(gui->panning), *pval);
-  //  break;
-  //case PORT_ATTACK_TIME:
-  //  rtb_value_element_set_value(RTB_VALUE_ELEMENT(gui->attack), *pval);
-  //  break;
-  //case PORT_HOLD_TIME:
-  //  rtb_value_element_set_value(RTB_VALUE_ELEMENT(gui->hold), *pval);
-  //  break;
-  //case PORT_DECAY_TIME:
-  //  rtb_value_element_set_value(RTB_VALUE_ELEMENT(gui->decay), *pval);
-  //  break;
-  //case PORT_SUSTAIN_LEVEL:
-  //  rtb_value_element_set_value(RTB_VALUE_ELEMENT(gui->sustain), *pval);
-  //  break;
-  //case PORT_RELEASE_TIME:
-  //  rtb_value_element_set_value(RTB_VALUE_ELEMENT(gui->release), *pval);
-  //  break;
+  case PORT_PANNING:
+    control_set_value(gui->panning, *pval);
+    break;
+  case PORT_ATTACK_TIME:
+    control_set_value(gui->attack, *pval);
+    break;
+  case PORT_HOLD_TIME:
+    control_set_value(gui->hold, *pval);
+    break;
+  case PORT_DECAY_TIME:
+    control_set_value(gui->decay, *pval);
+    break;
+  case PORT_SUSTAIN_LEVEL:
+    control_set_value(gui->sustain, *pval);
+    break;
+  case PORT_RELEASE_TIME:
+    control_set_value(gui->release, *pval);
+    break;
   default:
     break;
   }
