@@ -59,7 +59,7 @@ print_control(Control* control, float value) {
 }
 
 static int
-knob_value(struct rtb_element *element,
+control_value(struct rtb_element *element,
     const struct rtb_event *_e, void *data)
 {
   const struct rtb_value_event *e = RTB_EVENT_AS(_e, rtb_value_event);
@@ -78,7 +78,7 @@ knob_value(struct rtb_element *element,
 }
 
 static int
-knob_mouse_enter(struct rtb_element* element,
+control_mouse_enter(struct rtb_element* element,
     const struct rtb_event* _e, void* data)
 {
   Control* control = (Control*)data;
@@ -100,8 +100,8 @@ rtb_container_t* container) {
   knob->origin = def;
 
   rtb_container_add(container, RTB_ELEMENT(knob));
-  rtb_register_handler(RTB_ELEMENT(knob), RTB_VALUE_CHANGE, knob_value, control);
-  rtb_register_handler(RTB_ELEMENT(knob), RTB_MOUSE_ENTER, knob_mouse_enter, control);
+  rtb_register_handler(RTB_ELEMENT(knob), RTB_VALUE_CHANGE, control_value, control);
+  rtb_register_handler(RTB_ELEMENT(knob), RTB_MOUSE_ENTER, control_mouse_enter, control);
 
   control->knob = knob;
 }
