@@ -49,19 +49,6 @@ const float MIDI_NOTES[128] = {
 };
 
 typedef enum {
-  PORT_MIDI_IN = 0,
-  PORT_VOLUME,
-  PORT_PANNING,
-  PORT_ATTACK_TIME,
-  PORT_HOLD_TIME,
-  PORT_SUSTAIN_LEVEL,
-  PORT_DECAY_TIME,
-  PORT_RELEASE_TIME,
-  PORT_AUDIO_OUT_LEFT,
-  PORT_AUDIO_OUT_RIGHT
-} PortIndex;
-
-typedef enum {
   ATTACK = 0,
   HOLD,
   DECAY,
@@ -474,21 +461,21 @@ run(LV2_Handle instance, uint32_t n_samples)
       const uint8_t* const msg = (const uint8_t*)(ev + 1);
 
       switch (lv2_midi_message_type(msg)) {
-        case LV2_MIDI_MSG_NOTE_ON:
-          render_samples(samples_done, ev->time.frames, self);
-          samples_done = ev->time.frames;
+      case LV2_MIDI_MSG_NOTE_ON:
+        render_samples(samples_done, ev->time.frames, self);
+        samples_done = ev->time.frames;
 
-          note_on(msg[1], msg[2], self);
+        note_on(msg[1], msg[2], self);
 
-          break;
-        case LV2_MIDI_MSG_NOTE_OFF:
-          render_samples(samples_done, ev->time.frames, self);
-          samples_done = ev->time.frames;
+        break;
+      case LV2_MIDI_MSG_NOTE_OFF:
+        render_samples(samples_done, ev->time.frames, self);
+        samples_done = ev->time.frames;
 
-          note_off(msg[1], self);
+        note_off(msg[1], self);
 
-          break;
-        default: break;
+        break;
+      default: break;
       }
     }
   }

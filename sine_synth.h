@@ -9,4 +9,17 @@
 
 #define SINE_SYNTH_URI "http://bado.so/plugins/sine_synth"
 
+typedef enum {
+  PORT_MIDI_IN = 0,
+  PORT_VOLUME,
+  PORT_PANNING,
+  PORT_ATTACK_TIME,
+  PORT_HOLD_TIME,
+  PORT_SUSTAIN_LEVEL,
+  PORT_DECAY_TIME,
+  PORT_RELEASE_TIME,
+  PORT_AUDIO_OUT_LEFT,
+  PORT_AUDIO_OUT_RIGHT
+} PortIndex;
+
 #endif
