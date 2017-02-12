@@ -13,7 +13,13 @@ Features
 Install
 -------
 
-Just `make` and `sudo make install`, this should install the bundle at `/usr/local/lib/lv2`.
+This should install the bundle at `/usr/local/lib/lv2`.
+
+```bash
+make rutabaga
+make
+sudo make install
+```
 
 Motivation
 ----------
