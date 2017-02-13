@@ -16,6 +16,10 @@
 
 #define SINE_SYNTH_UI_URI  "http://bado.so/plugins/sine_synth#ui"
 
+#define FMT_GEN "%s:   %.2f"
+#define FMT_MS  "%s:   %.0f ms"
+#define FMT_DB  "%s:   %.1f dB"
+
 struct ControlStruct;
 
 typedef struct {
@@ -42,7 +46,7 @@ typedef struct ControlStruct {
 
   PortIndex port;
   char* label;
-  char* units;
+  char* fmt;
 
   struct rtb_knob* knob;
 } Control;
@@ -50,7 +54,7 @@ typedef struct ControlStruct {
 static void
 print_control(Control* control, float value) {
   char* label;
-  asprintf(&label, "%s:   %.2f %s", control->label, value, control->units);
+  asprintf(&label, control->fmt, control->label, value);
 
   rtb_label_set_text(control->gui->monitor, (rtb_utf8_t*)label);
 }
@@ -103,14 +107,21 @@ rtb_container_t* container) {
   control->knob = knob;
 }
 
+static void
+add_knob_i(Control* control, float min, float max, float def,
+rtb_container_t* container) {
+  add_knob(control, min, max, def, container);
+  control->knob->granularity = 1;
+}
+
 static Control*
-init_control(char* label, char* units, PortIndex port,
+init_control(char* label, char* fmt, PortIndex port,
 SineSynthGui* gui) {
   Control* control = (Control*)malloc(sizeof(Control));
 
   control->gui = gui;
   control->label = label;
-  control->units = units;
+  control->fmt = fmt;
   control->port = port;
 
   return control;
@@ -130,26 +141,26 @@ build_ui(SineSynthGui* gui) {
 
   gui->monitor = rtb_label_new((rtb_utf8_t*)"Sine Synth");
 
-  gui->volume = init_control("Volume", "dB", PORT_VOLUME, gui);
+  gui->volume = init_control("Volume", FMT_DB, PORT_VOLUME, gui);
   add_knob(gui->volume, -90, 24, -15, lower);
 
-  gui->panning = init_control("Panning", "", PORT_PANNING, gui);
+  gui->panning = init_control("Panning", FMT_GEN, PORT_PANNING, gui);
   add_knob(gui->panning, -1, 1, 0, lower);
 
-  gui->attack = init_control("Attack", "ms", PORT_ATTACK_TIME, gui);
-  add_knob(gui->attack, 1, 5000, 25, lower);
+  gui->attack = init_control("Attack", FMT_MS, PORT_ATTACK_TIME, gui);
+  add_knob_i(gui->attack, 1, 5000, 25, lower);
 
-  gui->hold = init_control("Hold", "ms", PORT_HOLD_TIME, gui);
-  add_knob(gui->hold, 0, 5000, 0, lower);
+  gui->hold = init_control("Hold", FMT_MS, PORT_HOLD_TIME, gui);
+  add_knob_i(gui->hold, 0, 5000, 0, lower);
 
-  gui->decay = init_control("Decay", "ms", PORT_DECAY_TIME, gui);
-  add_knob(gui->decay, 1, 5000, 25, lower);
+  gui->decay = init_control("Decay", FMT_MS, PORT_DECAY_TIME, gui);
+  add_knob_i(gui->decay, 1, 5000, 25, lower);
 
-  gui->sustain = init_control("Sustain", "", PORT_SUSTAIN_LEVEL, gui);
+  gui->sustain = init_control("Sustain", FMT_GEN, PORT_SUSTAIN_LEVEL, gui);
   add_knob(gui->sustain, 0, 1, 0.7, lower);
 
-  gui->release = init_control("Release", "ms", PORT_RELEASE_TIME, gui);
-  add_knob(gui->release, 1, 5000, 100, lower);
+  gui->release = init_control("Release", FMT_MS, PORT_RELEASE_TIME, gui);
+  add_knob_i(gui->release, 1, 5000, 100, lower);
 
   rtb_container_add(upper, RTB_ELEMENT(gui->monitor));
 

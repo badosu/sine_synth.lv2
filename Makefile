@@ -39,7 +39,7 @@ validate:
 	sord_validate $(LV2_TTLS) $(BUNDLE_TTLS)
 
 run:
-	jalv http://bado.so/plugins/sine_synth
+	jalv.gtk http://bado.so/plugins/sine_synth
 
 RUTABAGA = ./third_party/rutabaga
 RUTABAGA_LIBS = gl freetype2 x11 x11-xcb xkbcommon-x11 xcb-xkb xrender xcb-icccm freetype2
