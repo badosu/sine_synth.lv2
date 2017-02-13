@@ -13,12 +13,10 @@ Features
 Install
 -------
 
-This should install the bundle at `/usr/local/lib/lv2`.
-
 ```bash
 make rutabaga
 make
-sudo make install
+make install # Install the bundle at `~/.lv2`, run as root to install under `/usr/lib/lv2`
 ```
 
 Motivation
@@ -34,6 +32,13 @@ Areas of Improvement
 
 - Test weird combinations of ADSR parameters and check if clicking is expected or not
 - Apply normalization on voice output if improvements are noticeable
+
+### GUI
+
+- Apply custom style
+- Implement visual envelope
+- Group ADSR controls
+- Group Pan and Volume controls
 
 License
 -------

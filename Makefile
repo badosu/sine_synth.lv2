@@ -1,7 +1,13 @@
+user = $(shell whoami)
+ifeq ($(user),root)
+INSTALL_DIR = /usr/lib/lv2
+else
+INSTALL_DIR = ~/.lv2
+endif
+
 BUNDLE = sine_synth.lv2
 CFLAGS = -shared -fPIC -DPIC
 LV2 = /usr/lib/lv2
-LOCAL_LV2 = /usr/local/lib/lv2
 BUNDLE_TTLS = sine_synth.ttl manifest.ttl
 LV2_TTLS = $(shell find third_party/lv2 -name '*.ttl')
 
@@ -22,9 +28,9 @@ clean:
 	rm -rf $(BUNDLE) *.so
 
 install: $(BUNDLE)
-	mkdir -p $(LOCAL_LV2)
-	rm -rf $(LOCAL_LV2)/$(BUNDLE)
-	cp -R $(BUNDLE) $(LOCAL_LV2)
+	mkdir -p $(INSTALL_DIR)
+	rm -rf $(INSTALL_DIR)/$(BUNDLE)
+	cp -R $(BUNDLE) $(INSTALL_DIR)
 
 uninstall:
 	rm -rf $(INSTALL_DIR)/$(BUNDLE)
