@@ -467,18 +467,15 @@ run(LV2_Handle instance, uint32_t n_samples)
     if (ev->body.type == self->uris.midi_MidiEvent) {
       const uint8_t* const msg = (const uint8_t*)(ev + 1);
 
+      render_samples(samples_done, ev->time.frames, self);
+      samples_done = ev->time.frames;
+
       switch (lv2_midi_message_type(msg)) {
       case LV2_MIDI_MSG_NOTE_ON:
-        render_samples(samples_done, ev->time.frames, self);
-        samples_done = ev->time.frames;
-
         note_on(msg[1], msg[2], self);
 
         break;
       case LV2_MIDI_MSG_NOTE_OFF:
-        render_samples(samples_done, ev->time.frames, self);
-        samples_done = ev->time.frames;
-
         note_off(msg[1], self);
 
         break;
