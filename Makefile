@@ -38,7 +38,7 @@ uninstall:
 validate:
 	sord_validate $(LV2_TTLS) $(BUNDLE_TTLS)
 
-run:
+run: install
 	jalv.gtk http://bado.so/plugins/sine_synth
 
 RUTABAGA = ./third_party/rutabaga
