@@ -300,6 +300,15 @@ note_off(uint8_t note, SineSynth* self) {
 }
 
 static void
+deactivate_voice(uint8_t index, SineSynth* self) {
+  self->active_voices_n--;
+
+  for(uint8_t i = index; i < self->active_voices_n; i++) {
+    self->active_voices_i[i] = self->active_voices_i[i+1];
+  }
+}
+
+static void
 render_samples(uint32_t from, uint32_t to, SineSynth* self) {
   float* const out_left  = self->out_left;
   float* const out_right = self->out_right;
@@ -319,11 +328,9 @@ render_samples(uint32_t from, uint32_t to, SineSynth* self) {
         out_left[pos]  += self->pan_left  * out;
       }
       else {
-        self->active_voices_n--;
+        deactivate_voice(i_voice, self);
 
-        for(uint8_t i = i_voice; i < self->active_voices_n; i++) {
-          self->active_voices_i[i] = self->active_voices_i[i+1];
-        }
+        i_voice--;
       }
     }
   }
